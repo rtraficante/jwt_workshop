@@ -6,6 +6,17 @@ const {
 } = require("./db");
 const path = require("path");
 
+const requireToken = async (req, res, next) => {
+  try {
+    const auth = req.headers.authorization;
+    const user = await User.byToken(auth);
+    req.user = user;
+    next();
+  } catch (err) {
+    next(err);
+  }
+};
+
 app.get("/", (req, res) => res.sendFile(path.join(__dirname, "index.html")));
 
 app.post("/api/auth", async (req, res, next) => {
@@ -16,21 +27,22 @@ app.post("/api/auth", async (req, res, next) => {
   }
 });
 
-app.get("/api/auth", async (req, res, next) => {
+app.get("/api/auth", requireToken, async (req, res, next) => {
   try {
-    res.send(await User.byToken(req.headers.authorization));
+    res.send(req.user);
   } catch (ex) {
     next(ex);
   }
 });
 
-app.get("/api/users/:id/notes", async (req, res, next) => {
+app.get("/api/users/:id/notes", requireToken, async (req, res, next) => {
   try {
-    //   const user = await User.findByPk(req.params.id);
-    console.log('RHA',req.headers.authorization)
-    const user = await User.byToken(req.headers.authorization);
-    const notes = await user.getNotes();
-    res.send(notes);
+    const user = req.user;
+
+    if (Number(req.params.id) === user.id) {
+      const notes = await user.getNotes();
+      res.send(notes);
+    }
   } catch (err) {
     next(err);
   }

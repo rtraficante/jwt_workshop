@@ -51,18 +51,15 @@ User.byToken = async (token) => {
 };
 
 User.authenticate = async ({ username, password }) => {
-
-
   const user = await User.findOne({
     where: {
       username,
       //password,
     },
   });
-  const verified = await bcrypt.compare(password, user.password)
+  const verified = await bcrypt.compare(password, user.password);
 
   if (verified) {
-    console.log('ran')
     const userAuthen = await jwt.sign({ userId: user.id }, process.env.JWT); //process.env.JWT
     //console.log('USERAUTHEN',userAuthen)
     return userAuthen;
@@ -72,18 +69,12 @@ User.authenticate = async ({ username, password }) => {
   throw error;
 };
 
+const Note = conn.define("note", {
+  text: STRING,
+});
 
-const Note = conn.define(
-    'note',
-    {
-       text: STRING 
-    }
-)
-
-
- Note.belongsTo(User)
- User.hasMany(Note)
-
+Note.belongsTo(User);
+User.hasMany(Note);
 
 const syncAndSeed = async () => {
   await conn.sync({ force: true });
@@ -93,26 +84,18 @@ const syncAndSeed = async () => {
     { username: "larry", password: "larry_pw" },
   ];
 
-  const notes = [
-      {text: 'test1'},
-      {text: 'test2'},
-      {text: 'test3'}
-  ];
+  const notes = [{ text: "test1" }, { text: "test2" }, { text: "test3" }];
 
   const [note1, note2, note3] = await Promise.all(
-      notes.map(note => Note.create(note))
-  )
-  
-
+    notes.map((note) => Note.create(note))
+  );
 
   const [lucy, moe, larry] = await Promise.all(
     credentials.map((credential) => User.create(credential))
   );
 
-   
-
-    await lucy.setNotes(note1)
-    await moe.setNotes(note2)
+  await lucy.setNotes(note1);
+  await moe.setNotes(note2);
 
   return {
     users: {
@@ -121,12 +104,11 @@ const syncAndSeed = async () => {
       larry,
     },
     notes: {
-        note1,
-        note2,
-        note3
-    }
+      note1,
+      note2,
+      note3,
+    },
   };
-
 };
 
 module.exports = {
