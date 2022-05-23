@@ -81,6 +81,9 @@ const Note = conn.define(
 )
 
 
+ Note.belongsTo(User)
+ User.hasMany(Note)
+
 
 const syncAndSeed = async () => {
   await conn.sync({ force: true });
@@ -98,18 +101,32 @@ const syncAndSeed = async () => {
 
   const [note1, note2, note3] = await Promise.all(
       notes.map(note => Note.create(note))
-  ) 
+  )
+  
+
 
   const [lucy, moe, larry] = await Promise.all(
     credentials.map((credential) => User.create(credential))
   );
+
+   
+
+    await lucy.setNotes(note1)
+    await moe.setNotes(note2)
+
   return {
     users: {
       lucy,
       moe,
       larry,
     },
+    notes: {
+        note1,
+        note2,
+        note3
+    }
   };
+
 };
 
 module.exports = {
